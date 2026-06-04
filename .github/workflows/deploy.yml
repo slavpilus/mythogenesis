@@ -1,0 +1,38 @@
+name: Deploy to Hugging Face Space
+
+# Runs only after CI succeeds on main, then mirrors the repo to the HF Space.
+# Requires:
+#   - secret HF_TOKEN  : a Hugging Face write token
+#   - variable HF_SPACE_ID : the Space id, e.g. "username/mythogenesis"
+# If either is unset the job exits cleanly without deploying.
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_ID: ${{ vars.HF_SPACE_ID }}
+        run: |
+          if [ -z "$HF_TOKEN" ] || [ -z "$HF_SPACE_ID" ]; then
+            echo "::notice::HF_TOKEN secret or HF_SPACE_ID variable not set; skipping deploy."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git push --force "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_ID}.git" HEAD:main

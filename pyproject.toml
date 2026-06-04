@@ -1,0 +1,41 @@
+[project]
+name = "mythogenesis"
+version = "0.1.0"
+description = "A symbolic Game of Life where rules become folklore. Gradio Space for the Build Small Hackathon."
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "gradio>=6.16.0",
+    "huggingface-hub>=1.17.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra -q --strict-markers"
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["life_core", "semantics", "model_backend", "render", "seed_patterns", "config"]
+omit = ["app.py", "tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]

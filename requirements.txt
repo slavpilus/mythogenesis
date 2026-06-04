@@ -1,0 +1,5 @@
+# Hugging Face Spaces installs from this file at runtime.
+# gradio is provided by the Space SDK (sdk_version in README.md frontmatter).
+# Local development uses uv + pyproject.toml instead (uv sync).
+# Keep this in sync with the runtime dependencies in pyproject.toml.
+huggingface_hub>=1.17.0
