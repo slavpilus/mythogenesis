@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# Force JS actions onto Node 24 ahead of the 2026-06-16 default switch, so
+# actions that still bundle Node 20 (e.g. setup-uv) stop emitting deprecation warnings.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
