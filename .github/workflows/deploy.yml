@@ -35,4 +35,21 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git push --force "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_ID}.git" HEAD:main
+          remote="https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_ID}.git"
+          # Retry with backoff: the HF git endpoint can return transient 429/5xx
+          # when several deploys land close together.
+          attempts=5
+          delay=15
+          for i in $(seq 1 "$attempts"); do
+            if git push --force "$remote" HEAD:main; then
+              echo "Pushed to HF Space on attempt $i."
+              exit 0
+            fi
+            if [ "$i" -lt "$attempts" ]; then
+              echo "::warning::Push attempt $i failed; retrying in ${delay}s."
+              sleep "$delay"
+              delay=$((delay * 2))
+            fi
+          done
+          echo "::error::Failed to push to HF Space after ${attempts} attempts."
+          exit 1
