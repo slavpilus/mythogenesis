@@ -225,12 +225,15 @@ footer { display: none !important; }
 
 /* control strip styled to match .controls */
 #controls {
-  flex: 0 0 auto; display: flex; align-items: center; gap: 10px !important;
+  flex: 0 0 auto; display: flex !important; align-items: center; gap: 10px !important;
   padding: 11px 22px !important; border-top: 1px solid rgba(180,150,100,.16);
-  background: #18110a; flex-wrap: nowrap;
+  background: #18110a; flex-wrap: wrap; justify-content: flex-start;
 }
+/* every direct child sizes to its content and never collapses; the seed box is the
+ * only thing that grows, with a zero basis so it does not starve the buttons. */
+#controls > * { flex: 0 0 auto !important; width: auto !important; min-width: 0 !important; }
 #controls .gr-form, #controls > div { background: transparent !important; border: none !important; box-shadow: none !important; }
-#controls .seed-box { flex: 1 1 auto; min-width: 120px; }
+#controls .seed-box { flex: 1 1 0 !important; min-width: 160px; }
 #controls .seed-box textarea, #controls .seed-box input {
   background: rgba(255,255,255,.02) !important; border: 1px solid rgba(180,150,100,.16) !important;
   color: #ecdfc4 !important; font-family: "JetBrains Mono", monospace !important; font-size: 12.5px !important;
@@ -239,9 +242,10 @@ footer { display: none !important; }
 #controls .seed-box label, #controls .seed-box span { display: none !important; }
 
 #controls button {
+  flex: 0 0 auto !important; width: auto !important;
   font-family: "JetBrains Mono", monospace !important; font-size: 11px !important; letter-spacing: .1em;
   text-transform: uppercase; color: #a7916c; background: transparent; border: 1px solid rgba(180,150,100,.16);
-  border-radius: 4px; padding: 9px 13px !important; min-width: 0 !important; white-space: nowrap; box-shadow: none !important;
+  border-radius: 4px; padding: 9px 13px !important; white-space: nowrap; box-shadow: none !important;
 }
 #controls button:hover { color: #ecdfc4; border-color: rgba(200,168,110,.32); background: rgba(255,255,255,.025); }
 #controls button.btn-primary { color: #18110a; background: #e2b85e; border-color: #e2b85e; font-weight: 600; }
