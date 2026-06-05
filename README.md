@@ -23,9 +23,11 @@ Gradio Space for the Build Small Hackathon creative track, "An Adventure in Thou
 
 ## Try It
 
-- Space: TODO (add the Hugging Face Space URL)
+- Space: https://huggingface.co/spaces/SlavPilus/mythogenesis
 - Demo video: TODO (add the demo video link)
-- Model: TODO model id, TODO parameter count, at or below 32B total parameters
+- Model: pluggable <=32B model via the Hugging Face Inference API (set `MODEL_ID` + `HF_TOKEN`);
+  a deterministic word-genetics engine drives births and narration when no model is configured,
+  so the Space stays alive offline and in tests. TODO: pin the exact model id + parameter count.
 
 ## One Sentence
 
@@ -75,5 +77,11 @@ moss lantern ember river bone orchard
 
 ## Status
 
-Scaffold in place (project structure, tests, CI/CD, credentials wiring). Game logic
-is implemented per the build order in `handover.md`.
+Playable. The front-end design (ported from a Claude Design handoff) is implemented:
+a living toroidal board, an emerging sky of pantheon and myth words, a rolling story
+with a birth ticker and transparency chips, three moods, and the full control strip.
+The demo seed is planted and running on load. Core mechanics are covered by unit tests
+(`uv run pytest`), and CI/CD mirrors `main` to the Space.
+
+Remaining before submission: pin a concrete `<=32B` model id, record the demo video,
+and draft the social post.

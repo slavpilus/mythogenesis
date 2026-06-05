@@ -1,0 +1,253 @@
+/* Mythogenesis — app.css
+ * Ported from the Claude Design handoff (ui/styles.css), adapted for Gradio:
+ *  - #stage fills a flex container instead of position:fixed (Gradio renders the
+ *    control strip as sibling components, so the stage must not overlay them).
+ *  - a GRADIO OVERRIDES block at the end reclaims the page chrome and themes the
+ *    native controls to match the design.
+ * Three stacked bands (sky / grid / story). Mood set via [data-mood] on #stage.
+ */
+
+:root {
+  --gold: #e9c46a;
+  --gold-dim: #b9914a;
+  --flash-ms: 620ms;
+  --tick-ease: cubic-bezier(.4, .0, .2, 1);
+}
+
+* { box-sizing: border-box; }
+
+/* ============ MOODS ============ */
+#stage[data-mood="wood"] {
+  --canvas: #080d0b; --canvas-2: #0c1411; --canvas-grid: #060a09;
+  --panel: rgba(18, 28, 24, .55);
+  --ink: #d9e2d6; --ink-dim: #8fa395; --ink-faint: #5a6b60;
+  --line: rgba(120, 150, 130, .14); --line-strong: rgba(130, 165, 140, .3);
+  --accent: #6fae5a; --gold: #ecc873; --gold-dim: #a8853f;
+  --sky-top: #060c12; --sky-bot: #0a110d;
+  --font-display: "Cormorant Garamond", serif;
+  --font-body: "Spectral", Georgia, serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --display-weight: 500; --display-tracking: 0.01em; --display-transform: none;
+}
+#stage[data-mood="scope"] {
+  --canvas: #070809; --canvas-2: #0c0f12; --canvas-grid: #050607;
+  --panel: rgba(16, 22, 26, .6);
+  --ink: #d2e2e6; --ink-dim: #7e949a; --ink-faint: #4c5e64;
+  --line: rgba(120, 170, 180, .12); --line-strong: rgba(130, 190, 200, .28);
+  --accent: #5ec8d8; --gold: #eccf6a; --gold-dim: #9a8c44;
+  --sky-top: #060a0c; --sky-bot: #080b0d;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --display-weight: 600; --display-tracking: 0.16em; --display-transform: uppercase;
+}
+#stage[data-mood="manuscript"] {
+  --canvas: #0f0b07; --canvas-2: #18110a; --canvas-grid: #0c0805;
+  --panel: rgba(30, 22, 13, .55);
+  --ink: #ecdfc4; --ink-dim: #a7916c; --ink-faint: #6f5d42;
+  --line: rgba(180, 150, 100, .16); --line-strong: rgba(200, 168, 110, .32);
+  --accent: #c2502f; --gold: #e2b85e; --gold-dim: #ab8232;
+  --sky-top: #0c0905; --sky-bot: #120c07;
+  --font-display: "EB Garamond", Georgia, serif;
+  --font-body: "EB Garamond", Georgia, serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --display-weight: 500; --display-tracking: 0.02em; --display-transform: none;
+}
+
+/* ============ STAGE LAYOUT ============ */
+#stage {
+  position: relative; height: 100%; width: 100%;
+  display: flex; flex-direction: column;
+  background:
+    radial-gradient(120% 80% at 50% 0%, var(--sky-top), transparent 55%),
+    linear-gradient(180deg, var(--canvas) 0%, var(--canvas-2) 100%);
+  font-family: var(--font-body); color: var(--ink);
+  --glow-mult: 1; --cell-gap: 1;
+}
+
+.band { position: relative; min-height: 0; }
+
+/* Sky band */
+.sky {
+  flex: 0 0 25vh; min-height: 172px; overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--sky-top), transparent);
+}
+.sky-legend {
+  position: absolute; right: 20px; top: 15px; z-index: 4; pointer-events: none;
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .05em;
+  color: var(--ink-faint); line-height: 1.9;
+}
+.sky-legend .row { display: flex; align-items: center; justify-content: flex-end; gap: 7px; }
+.sky-legend .kd { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 6px currentColor; }
+.sky-legend .kd.god { background: #fff; color: #fff; }
+.sky-legend .kd.myth { background: var(--gold); color: var(--gold); }
+.sky-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sky-labels { position: absolute; inset: 0; pointer-events: none; }
+
+.wordmark { position: absolute; left: 22px; top: 16px; z-index: 4; pointer-events: none; }
+.wordmark h1 {
+  margin: 0; font-family: var(--font-display);
+  font-weight: var(--display-weight); letter-spacing: var(--display-tracking);
+  text-transform: var(--display-transform);
+  font-size: 22px; color: var(--ink); opacity: .92; line-height: 1;
+}
+.wordmark p {
+  margin: 5px 0 0; font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint);
+}
+
+/* Grid band */
+.grid-band { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: 14px; min-height: 0; }
+.grid-wrap { position: relative; height: 100%; aspect-ratio: 1 / 1; max-width: 100%; }
+.grid-svg {
+  display: block; width: 100%; height: 100%;
+  background: var(--canvas-grid); border: 1px solid var(--line);
+  box-shadow: inset 0 0 60px rgba(0,0,0,.6);
+}
+.grid-svg rect.cell { transition: fill 480ms var(--tick-ease), opacity 420ms var(--tick-ease); }
+.grid-svg rect.cell-born { animation: cellBorn var(--flash-ms) var(--tick-ease); }
+
+/* hover readout via native <title>; custom float labels omitted in the server render */
+
+/* Story band */
+.story {
+  flex: 0 0 25vh; min-height: 150px; display: grid; grid-template-columns: 1.7fr 1fr;
+  border-top: 1px solid var(--line);
+  background: linear-gradient(0deg, var(--sky-bot), transparent);
+}
+.prose {
+  position: relative; padding: 16px 22px 14px; overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 22%, #000 100%);
+}
+.prose-inner { display: flex; flex-direction: column; justify-content: flex-end; min-height: 100%; }
+.prose .line {
+  font-family: var(--font-body); font-size: 15.5px; line-height: 1.5;
+  color: var(--ink-dim); margin: 0 0 7px; text-wrap: pretty; transition: opacity 600ms, color 600ms;
+}
+.prose .line:last-child { color: var(--ink); }
+.prose .line.fresh { animation: lineIn 700ms var(--tick-ease) both; }
+#stage[data-mood="scope"] .prose .line { font-size: 14px; }
+@keyframes lineIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.story-side { border-left: 1px solid var(--line); padding: 14px 18px; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.ticker-label, .chips-label {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--ink-faint); margin-bottom: 7px;
+}
+.ticker {
+  font-family: var(--font-mono); font-size: 12.5px; color: var(--ink);
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; line-height: 1.7;
+}
+.ticker .sw { width: 8px; height: 8px; border-radius: 2px; box-shadow: 0 0 5px currentColor; }
+.ticker .op { color: var(--ink-faint); }
+.ticker .arrow { color: var(--gold); padding: 0 2px; }
+.ticker .child { color: var(--ink); }
+.ticker.fresh { animation: lineIn 500ms var(--tick-ease) both; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: auto; }
+.chip {
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .04em;
+  color: var(--ink-dim); border: 1px solid var(--line); border-radius: 3px;
+  padding: 5px 8px; display: flex; gap: 6px; align-items: baseline; background: rgba(255,255,255,.012);
+}
+.chip b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.chip.myth b { color: var(--gold); }
+
+/* wide story layout (the landed default) */
+.story[data-layout="wide"] { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+.story[data-layout="wide"] .story-side {
+  border-left: none; border-top: 1px solid var(--line);
+  flex-direction: row; align-items: center; gap: 30px; padding: 11px 22px;
+}
+.story[data-layout="wide"] .story-side > div:first-child { flex: 1 1 auto; min-width: 0; }
+.story[data-layout="wide"] .chips { margin-top: 0; }
+.story[data-layout="wide"] .ticker-label, .story[data-layout="wide"] .chips-label { margin-bottom: 4px; }
+.story[data-layout="wide"] .ticker { line-height: 1.4; }
+
+/* ============ SKY STARS ============ */
+@keyframes twinkle { 0%,100% { opacity: var(--tw); } 50% { opacity: calc(var(--tw) * .55); } }
+.star-twinkle { animation: twinkle var(--twdur, 4s) ease-in-out infinite; }
+.sky-name {
+  position: absolute; transform: translate(-50%, 7px); white-space: nowrap;
+  font-family: var(--font-display); letter-spacing: .04em; text-transform: var(--display-transform);
+  transition: left 700ms var(--tick-ease), top 700ms var(--tick-ease), opacity 700ms;
+}
+.sky-name.pantheon { color: var(--ink); font-size: 12px; font-weight: var(--display-weight); text-shadow: 0 0 10px rgba(255,255,255,.22), 0 1px 3px #000; }
+.sky-name.myth { color: var(--gold); font-weight: 600; transform: translate(-50%, 8px); text-shadow: 0 0 12px rgba(236,200,115,.4), 0 1px 3px #000; }
+.sky-name.glyph { transform: translate(-50%, -50%); text-shadow: 0 0 14px currentColor, 0 1px 4px #000; }
+.sky-name.pantheon.glyph { font-size: 18px; }
+.sky-name.myth.just-risen { animation: glyphRise 1500ms var(--tick-ease) both; }
+@keyframes glyphRise {
+  0% { opacity: 0; transform: translate(-50%, 30px) scale(.6); filter: brightness(2.4); }
+  45% { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
+  100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+}
+.sky-hint {
+  position: absolute; left: 50%; top: 60%; transform: translate(-50%, -50%);
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-faint); text-align: center;
+}
+
+/* newborn flash on cells */
+@keyframes cellBorn { 0% { filter: brightness(3.2) saturate(1.4); } 100% { filter: brightness(1); } }
+
+.ended-veil { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; opacity: 0; transition: opacity 1.2s; z-index: 5; }
+.ended-veil.on { opacity: 1; }
+.ended-veil .epi {
+  font-family: var(--font-display); font-size: 22px; color: var(--ink);
+  text-align: center; line-height: 1.7; text-shadow: 0 2px 20px #000;
+  background: var(--panel); padding: 22px 30px; border: 1px solid var(--line-strong); backdrop-filter: blur(6px);
+}
+
+@media (max-width: 720px) {
+  .story { grid-template-columns: 1fr; }
+  .story-side { display: none; }
+  .wordmark p { display: none; }
+}
+
+/* ==================================================================================
+ * GRADIO OVERRIDES — reclaim the page chrome and theme the native control strip.
+ * ================================================================================== */
+html, body, gradio-app { height: 100%; margin: 0; padding: 0; background: #05060a; }
+.gradio-container {
+  max-width: none !important; width: 100% !important; height: 100vh !important;
+  margin: 0 !important; padding: 0 !important; background: #05060a;
+}
+.gradio-container > .main, .gradio-container .contain { height: 100%; padding: 0 !important; }
+footer { display: none !important; }
+
+/* full-viewport flex column: stage grows, controls pinned */
+#myth-root { position: fixed; inset: 0; display: flex; flex-direction: column; gap: 0 !important; padding: 0 !important; }
+#stage-html { flex: 1 1 auto; min-height: 0; padding: 0 !important; }
+#stage-html > div { height: 100%; }
+
+/* control strip styled to match .controls */
+#controls {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 10px !important;
+  padding: 11px 22px !important; border-top: 1px solid rgba(180,150,100,.16);
+  background: #18110a; flex-wrap: nowrap;
+}
+#controls .gr-form, #controls > div { background: transparent !important; border: none !important; box-shadow: none !important; }
+#controls .seed-box { flex: 1 1 auto; min-width: 120px; }
+#controls .seed-box textarea, #controls .seed-box input {
+  background: rgba(255,255,255,.02) !important; border: 1px solid rgba(180,150,100,.16) !important;
+  color: #ecdfc4 !important; font-family: "JetBrains Mono", monospace !important; font-size: 12.5px !important;
+  border-radius: 4px !important; box-shadow: none !important; min-height: 0 !important;
+}
+#controls .seed-box label, #controls .seed-box span { display: none !important; }
+
+#controls button {
+  font-family: "JetBrains Mono", monospace !important; font-size: 11px !important; letter-spacing: .1em;
+  text-transform: uppercase; color: #a7916c; background: transparent; border: 1px solid rgba(180,150,100,.16);
+  border-radius: 4px; padding: 9px 13px !important; min-width: 0 !important; white-space: nowrap; box-shadow: none !important;
+}
+#controls button:hover { color: #ecdfc4; border-color: rgba(200,168,110,.32); background: rgba(255,255,255,.025); }
+#controls button.btn-primary { color: #18110a; background: #e2b85e; border-color: #e2b85e; font-weight: 600; }
+#controls button.btn-accent { color: #c2502f; border-color: rgba(194,80,47,.4); }
+
+#controls .speed-box { flex: 0 0 auto; min-width: 150px; }
+#controls .speed-box input[type=range] { accent-color: #c2502f; }
+#controls .mood-box { flex: 0 0 auto; min-width: 140px; }
+#controls .mood-box label > span { color: #6f5d42 !important; font-family: "JetBrains Mono", monospace !important; font-size: 9px !important; letter-spacing: .12em; text-transform: uppercase; }
