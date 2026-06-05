@@ -31,15 +31,13 @@ _HEAD = (
     '&family=JetBrains+Mono:wght@400;500&display=swap" />'
 )
 
-DEFAULT_SPEED = 1.5  # generations per second
+MOOD = "manuscript"  # fixed mood (no in-app switcher)
+SPEED = 0.5  # generations per second (fixed)
+TICK_INTERVAL = 1.0 / SPEED  # seconds per generation
 
 
-def _interval(speed: float) -> float:
-    return 1.0 / max(0.5, float(speed))
-
-
-def _running_timer(active: bool, speed: float) -> gr.Timer:
-    return gr.Timer(value=_interval(speed), active=active)
+def _running_timer(active: bool) -> gr.Timer:
+    return gr.Timer(value=TICK_INTERVAL, active=active)
 
 
 def build_app() -> gr.Blocks:
@@ -62,100 +60,69 @@ def build_app() -> gr.Blocks:
                 demo_btn = gr.Button("Plant demo", elem_classes=["btn-accent"], scale=0)
                 step_btn = gr.Button("Step", scale=0)
                 auto_btn = gr.Button("Auto-tick", scale=0)
-                speed = gr.Slider(
-                    0.5,
-                    4,
-                    value=DEFAULT_SPEED,
-                    step=0.5,
-                    label="speed",
-                    elem_classes=["speed-box"],
-                    container=True,
-                    scale=0,
-                )
-                mood = gr.Dropdown(
-                    choices=[
-                        ("Manuscript", "manuscript"),
-                        ("Nocturnal wood", "wood"),
-                        ("Lab scope", "scope"),
-                    ],
-                    value="manuscript",
-                    label="mood",
-                    elem_classes=["mood-box"],
-                    container=True,
-                    scale=0,
-                )
                 reset_btn = gr.Button("Reset", scale=0)
 
-        tick = gr.Timer(value=_interval(DEFAULT_SPEED), active=False)
+        tick = gr.Timer(value=TICK_INTERVAL, active=False)
 
         # ---- handlers --------------------------------------------------------------
-        def on_load(m, sp):
+        def on_load():
             g = Game()
             snap = g.seed(config.DEMO_SEED, is_demo=True)
-            return g, render_stage(snap, m), True, _running_timer(True, sp), "Pause"
+            return g, render_stage(snap, MOOD), True, _running_timer(True), "Pause"
 
-        def on_plant(g, text, m, sp):
+        def on_plant(g, text):
             g = g or Game()
             snap = g.seed(text or config.DEMO_SEED, is_demo=False)
-            return g, render_stage(snap, m), True, _running_timer(True, sp), "Pause"
+            return g, render_stage(snap, MOOD), True, _running_timer(True), "Pause"
 
-        def on_demo(g, m, sp):
+        def on_demo(g):
             g = g or Game()
             snap = g.seed(config.DEMO_SEED, is_demo=True)
             return (
                 g,
                 config.DEMO_SEED,
-                render_stage(snap, m),
+                render_stage(snap, MOOD),
                 True,
-                _running_timer(True, sp),
+                _running_timer(True),
                 "Pause",
             )
 
-        def on_step(g, m):
+        def on_step(g):
             g = g or Game()
             if not g.registry:
                 g.seed(config.DEMO_SEED, is_demo=True)
             snap = g.step()
-            return g, render_stage(snap, m), False, gr.Timer(active=False), "Auto-tick"
+            return g, render_stage(snap, MOOD), False, gr.Timer(active=False), "Auto-tick"
 
-        def on_toggle(g, run, sp):
+        def on_toggle(g, run):
             g = g or Game()
             run = not run
             active = run and not g.ended
-            return g, run, _running_timer(active, sp), ("Pause" if active else "Auto-tick")
+            return g, run, _running_timer(active), ("Pause" if active else "Auto-tick")
 
-        def on_reset(g, text, m, sp):
+        def on_reset(g, text):
             g = g or Game()
             snap = g.seed(text or config.DEMO_SEED, is_demo=False)
-            return g, render_stage(snap, m), True, _running_timer(True, sp), "Pause"
+            return g, render_stage(snap, MOOD), True, _running_timer(True), "Pause"
 
-        def on_tick(g, run, m, sp):
+        def on_tick(g, run):
             if not g or not run or g.ended:
                 return g, gr.skip(), run, gr.Timer(active=False), gr.skip()
             snap = g.step()
             if g.ended:
-                return g, render_stage(snap, m), False, gr.Timer(active=False), "Auto-tick"
-            return g, render_stage(snap, m), True, _running_timer(True, sp), "Pause"
-
-        def on_speed(run, sp):
-            return _running_timer(bool(run), sp)
-
-        def on_mood(g, m):
-            snap = g.snapshot() if g else None
-            return render_stage(snap, m)
+                return g, render_stage(snap, MOOD), False, gr.Timer(active=False), "Auto-tick"
+            return g, render_stage(snap, MOOD), True, _running_timer(True), "Pause"
 
         # ---- wiring ----------------------------------------------------------------
         plant_io = [game, stage, running, tick, auto_btn]
-        demo.load(on_load, [mood, speed], plant_io)
-        plant_btn.click(on_plant, [game, seed, mood, speed], plant_io)
-        seed.submit(on_plant, [game, seed, mood, speed], plant_io)
-        demo_btn.click(on_demo, [game, mood, speed], [game, seed, stage, running, tick, auto_btn])
-        step_btn.click(on_step, [game, mood], plant_io)
-        auto_btn.click(on_toggle, [game, running, speed], [game, running, tick, auto_btn])
-        reset_btn.click(on_reset, [game, seed, mood, speed], plant_io)
-        tick.tick(on_tick, [game, running, mood, speed], plant_io)
-        speed.change(on_speed, [running, speed], tick)
-        mood.change(on_mood, [game, mood], stage)
+        demo.load(on_load, None, plant_io)
+        plant_btn.click(on_plant, [game, seed], plant_io)
+        seed.submit(on_plant, [game, seed], plant_io)
+        demo_btn.click(on_demo, [game], [game, seed, stage, running, tick, auto_btn])
+        step_btn.click(on_step, [game], plant_io)
+        auto_btn.click(on_toggle, [game, running], [game, running, tick, auto_btn])
+        reset_btn.click(on_reset, [game, seed], plant_io)
+        tick.tick(on_tick, [game, running], plant_io)
 
     return demo
 

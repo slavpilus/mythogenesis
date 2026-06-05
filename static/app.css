@@ -246,8 +246,3 @@ footer { display: none !important; }
 #controls button:hover { color: #ecdfc4; border-color: rgba(200,168,110,.32); background: rgba(255,255,255,.025); }
 #controls button.btn-primary { color: #18110a; background: #e2b85e; border-color: #e2b85e; font-weight: 600; }
 #controls button.btn-accent { color: #c2502f; border-color: rgba(194,80,47,.4); }
-
-#controls .speed-box { flex: 0 0 auto; min-width: 150px; }
-#controls .speed-box input[type=range] { accent-color: #c2502f; }
-#controls .mood-box { flex: 0 0 auto; min-width: 140px; }
-#controls .mood-box label > span { color: #6f5d42 !important; font-family: "JetBrains Mono", monospace !important; font-size: 9px !important; letter-spacing: .12em; text-transform: uppercase; }
