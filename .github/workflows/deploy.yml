@@ -1,6 +1,7 @@
 name: Deploy to Hugging Face Space
 
-# Runs only after CI succeeds on main, then mirrors the repo to the HF Space.
+# Runs only after CI succeeds on main, then uploads the repo to the HF Space via the
+# huggingface_hub commit API (more resilient than git push, which rate-limits hard).
 # Requires:
 #   - secret HF_TOKEN  : a Hugging Face write token
 #   - variable HF_SPACE_ID : the Space id, e.g. "username/mythogenesis"
@@ -25,35 +26,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
 
-      - name: Push to Hugging Face Space
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Upload to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_SPACE_ID: ${{ vars.HF_SPACE_ID }}
-        run: |
-          if [ -z "$HF_TOKEN" ] || [ -z "$HF_SPACE_ID" ]; then
-            echo "::notice::HF_TOKEN secret or HF_SPACE_ID variable not set; skipping deploy."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          remote="https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_ID}.git"
-          # Retry with backoff: the HF git endpoint can return transient 429/5xx
-          # when several deploys land close together.
-          attempts=5
-          delay=15
-          for i in $(seq 1 "$attempts"); do
-            if git push --force "$remote" HEAD:main; then
-              echo "Pushed to HF Space on attempt $i."
-              exit 0
-            fi
-            if [ "$i" -lt "$attempts" ]; then
-              echo "::warning::Push attempt $i failed; retrying in ${delay}s."
-              sleep "$delay"
-              delay=$((delay * 2))
-            fi
-          done
-          echo "::error::Failed to push to HF Space after ${attempts} attempts."
-          exit 1
+        run: uv run --with "huggingface_hub>=1.0" python scripts/deploy_to_space.py
